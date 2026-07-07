@@ -125,10 +125,9 @@ if gen_clicked:
 if "numbers" in st.session_state and st.session_state.numbers:
     numbers = st.session_state.numbers
 
-    # 折线图预览（用 Streamlit 内置图表，不依赖 pandas/matplotlib）
+    # 折线图预览（传入列表，Streamlit 自动以索引为横坐标）
     st.subheader("📊 预览")
-    chart_data = {str(i): v for i, v in enumerate(numbers, 1)}
-    st.line_chart(chart_data, height=350)
+    st.line_chart(numbers, height=350)
 
     # 数据展示（用 text_area 方便全选复制）
     st.subheader("📋 数据")
