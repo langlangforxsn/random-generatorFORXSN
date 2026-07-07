@@ -6,6 +6,7 @@ from openpyxl import Workbook
 # ── 页面配置 ──────────────────────────────────────────────
 st.set_page_config(page_title="随机数生成器", page_icon="🎲", layout="wide")
 st.title("🎲 随机数生成器")
+st.caption("自由配置分段、趋势和波动幅度，生成随机数并导出")
 
 # ── 初始化 session_state ──────────────────────────────────
 if "segments" not in st.session_state:
