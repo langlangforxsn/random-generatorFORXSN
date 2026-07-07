@@ -2,6 +2,7 @@ import random
 import io
 import streamlit as st
 from openpyxl import Workbook
+import pandas as pd
 
 # ── 页面配置 ──────────────────────────────────────────────
 st.set_page_config(page_title="随机数生成器", page_icon="🎲", layout="wide")
@@ -125,9 +126,10 @@ if gen_clicked:
 if "numbers" in st.session_state and st.session_state.numbers:
     numbers = st.session_state.numbers
 
-    # 折线图预览（传入列表，Streamlit 自动以索引为横坐标）
+    # 折线图预览（用 DataFrame 确保横纵坐标正确）
     st.subheader("📊 预览")
-    st.line_chart(numbers, height=350)
+    df = pd.DataFrame({"序号": range(1, len(numbers) + 1), "数值": numbers})
+    st.line_chart(df, x="序号", y="数值", height=350)
 
     # 数据展示（用 text_area 方便全选复制）
     st.subheader("📋 数据")
