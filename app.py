@@ -9,11 +9,7 @@ st.title("🎲 随机数生成器")
 
 # ── 初始化 session_state ──────────────────────────────────
 if "segments" not in st.session_state:
-    st.session_state.segments = [
-        {"count": 36, "trend": "平稳", "start": 2.7, "end": 2.7},
-        {"count": 12, "trend": "下降", "start": 2.7, "end": 0.2},
-        {"count": 34, "trend": "平稳", "start": 0.2, "end": 0.2},
-    ]
+    st.session_state.segments = []
 if "gen_counter" not in st.session_state:
     st.session_state.gen_counter = 0
 
