@@ -30,22 +30,29 @@ col1, col2 = st.columns(2)
 with col1:
     decimals = st.number_input("小数位数", min_value=0, max_value=10, value=5, step=1)
 
-with col2:
-    st.radio(
-        "分布模式（平稳趋势时生效）",
-        options=["均匀分布", "高斯分布", "三角分布", "指数分布（右偏）", "指数分布（左偏）"],
-        index=0,
-        horizontal=False,
-        key="use_gauss",
-        help="高斯分布：数值集中在中心附近\n均匀分布：数值在范围内均匀分散\n三角分布：中心概率高，两侧递减\n指数分布：一端概率高，向另一端递减"
-    )
+# 检查是否有"平稳"趋势的分段
+has_stable = any(s["trend"] == "平稳" for s in st.session_state.segments)
+
+if has_stable:
+    with col2:
+        st.radio(
+            "分布模式（平稳趋势时生效）",
+            options=["均匀分布", "高斯分布", "三角分布", "指数分布（右偏）", "指数分布（左偏）"],
+            index=0,
+            horizontal=False,
+            key="use_gauss",
+            help="均匀分布：数值在范围内均匀分散\n高斯分布：数值集中在中心附近\n三角分布：中心概率高，两侧递减\n指数分布：一端概率高，向另一端递减"
+        )
+else:
+    with col2:
+        st.info("分段中有"平稳"趋势时，分布模式将在此显示")
 
 use_gauss = st.session_state.use_gauss in ["高斯分布", "三角分布"]
 
 if use_gauss:
     volatility = st.slider("波动幅度（标准差）", min_value=0.0, max_value=10.0, value=0.5, step=0.01, format="%.3f")
 else:
-    volatility = 0.5  # 均匀/指数分布不需要标准差
+    volatility = 0.5
 
 # ── 分段设置 ──────────────────────────────────────────────
 st.subheader("分段设置")
