@@ -23,7 +23,7 @@ st.subheader("全局参数")
 
 volatility = 0.05
 if "use_gauss" not in st.session_state:
-    st.session_state.use_gauss = "高斯分布"
+    st.session_state.use_gauss = "均匀分布"
 
 col1, col2 = st.columns(2)
 
@@ -33,7 +33,7 @@ with col1:
 with col2:
     st.radio(
         "分布模式（平稳趋势时生效）",
-        options=["高斯分布", "均匀分布", "三角分布", "指数分布（右偏）", "指数分布（左偏）"],
+        options=["均匀分布", "高斯分布", "三角分布", "指数分布（右偏）", "指数分布（左偏）"],
         index=0,
         horizontal=False,
         key="use_gauss",
