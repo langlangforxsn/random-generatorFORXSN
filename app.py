@@ -19,11 +19,17 @@ if "gen_counter" not in st.session_state:
 
 # ── 全局参数 ──────────────────────────────────────────────
 st.subheader("全局参数")
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 with col1:
     decimals = st.number_input("小数位数", min_value=0, max_value=10, value=5, step=1)
 with col2:
-    volatility = st.number_input("波动幅度（标准差）", min_value=0.0, max_value=10.0, value=0.05, step=0.01, format="%.3f")
+    use_gauss = st.checkbox("启用高斯分布", value=True,
+        help="勾选：数值集中在中心附近（正态分布）\n不勾选：数值在范围内均匀分散")
+
+volatility = 0.05
+if use_gauss:
+    with col3:
+        volatility = st.number_input("波动幅度（标准差）", min_value=0.0, max_value=10.0, value=0.05, step=0.01, format="%.3f")
 
 # ── 分段设置 ──────────────────────────────────────────────
 st.subheader("分段设置")
@@ -68,7 +74,7 @@ st.button("＋ 添加分段", on_click=add_segment)
 # ── 生成随机数 ────────────────────────────────────────────
 
 
-def generate_numbers(segments, decimals, volatility):
+def generate_numbers(segments, decimals, volatility, use_gauss):
     result = []
     for seg in segments:
         count = seg["count"]
@@ -81,20 +87,23 @@ def generate_numbers(segments, decimals, volatility):
 
         for i in range(count):
             if trend == "平稳":
-                center = (start + end) / 2  # 中心取中点，更均匀分布
+                center = (start + end) / 2
             else:
                 ratio = i / max(count - 1, 1)
                 center = start + (end - start) * ratio
 
-            # 循环生成，确保值严格在 [low, high] 范围内
-            max_attempts = 100
-            for _ in range(max_attempts):
-                val = round(random.gauss(center, volatility), decimals)
-                if low <= val <= high:
-                    break
+            if use_gauss:
+                # 高斯分布（正态分布），循环确保在范围内
+                max_attempts = 100
+                for _ in range(max_attempts):
+                    val = round(random.gauss(center, volatility), decimals)
+                    if low <= val <= high:
+                        break
+                else:
+                    val = max(low, min(high, val))
             else:
-                # 如果 100 次都没命中范围，直接裁剪到边界
-                val = max(low, min(high, val))
+                # 均匀分布，整个范围内均匀随机
+                val = round(random.uniform(low, high), decimals)
 
             result.append(val)
     return result
@@ -131,7 +140,7 @@ with btn_col3:
 
 # ── 生成逻辑 ──────────────────────────────────────────────
 if gen_clicked:
-    numbers = generate_numbers(st.session_state.segments, decimals, volatility)
+    numbers = generate_numbers(st.session_state.segments, decimals, volatility, use_gauss)
     st.session_state.numbers = numbers
     st.session_state.gen_counter += 1
 
