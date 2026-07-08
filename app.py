@@ -81,7 +81,7 @@ def generate_numbers(segments, decimals, volatility):
 
         for i in range(count):
             if trend == "平稳":
-                center = start
+                center = (start + end) / 2  # 中心取中点，更均匀分布
             else:
                 ratio = i / max(count - 1, 1)
                 center = start + (end - start) * ratio
