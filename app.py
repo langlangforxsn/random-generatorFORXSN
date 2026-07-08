@@ -109,7 +109,15 @@ def generate_numbers(segments, decimals, volatility, dist_mode):
                 ratio = i / max(count - 1, 1)
                 center = start + (end - start) * ratio
 
-            val = _generate_one(center, low, high, volatility, dist_mode, decimals)
+            if trend != "平稳":
+                # 上升/下降趋势：用均匀分布 + 小范围抖动，保证严格单调
+                # 每个点的范围是相邻中心点之间的区域
+                half_step = max(abs(end - start) / max(count, 1) / 2, 0.001)
+                local_low = max(low, center - half_step)
+                local_high = min(high, center + half_step)
+                val = round(random.uniform(local_low, local_high), decimals)
+            else:
+                val = _generate_one(center, low, high, volatility, dist_mode, decimals)
             result.append(val)
     return result
 
