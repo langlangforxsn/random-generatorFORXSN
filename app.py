@@ -19,17 +19,31 @@ if "gen_counter" not in st.session_state:
 
 # ── 全局参数 ──────────────────────────────────────────────
 st.subheader("全局参数")
-col1, col2, col3 = st.columns(3)
-with col1:
-    decimals = st.number_input("小数位数", min_value=0, max_value=10, value=5, step=1)
-with col2:
-    use_gauss = st.checkbox("启用高斯分布", value=True,
-        help="勾选：数值集中在中心附近（正态分布）\n不勾选：数值在范围内均匀分散")
 
 volatility = 0.05
+if "use_gauss" not in st.session_state:
+    st.session_state.use_gauss = True
+
+col1, col2 = st.columns(2)
+
+with col1:
+    decimals = st.number_input("小数位数", min_value=0, max_value=10, value=5, step=1)
+
+with col2:
+    mode_label = "分布模式"
+    st.radio(
+        "分布模式（平稳趋势时生效）",
+        options=["高斯分布", "均匀分布"],
+        index=0,
+        horizontal=True,
+        key="use_gauss",
+        help="高斯分布：数值集中在中心附近\n均匀分布：数值在范围内均匀分散"
+    )
+
+use_gauss = st.session_state.use_gauss == "高斯分布"
+
 if use_gauss:
-    with col3:
-        volatility = st.number_input("波动幅度（标准差）", min_value=0.0, max_value=10.0, value=0.05, step=0.01, format="%.3f")
+    volatility = st.slider("波动幅度（标准差）", min_value=0.0, max_value=2.0, value=0.1, step=0.01, format="%.3f")
 
 # ── 分段设置 ──────────────────────────────────────────────
 st.subheader("分段设置")
