@@ -1,5 +1,6 @@
 import random
 import io
+import math
 import streamlit as st
 from openpyxl import Workbook
 import pandas as pd
@@ -22,7 +23,7 @@ st.subheader("全局参数")
 
 volatility = 0.05
 if "use_gauss" not in st.session_state:
-    st.session_state.use_gauss = True
+    st.session_state.use_gauss = "高斯分布"
 
 col1, col2 = st.columns(2)
 
@@ -30,20 +31,21 @@ with col1:
     decimals = st.number_input("小数位数", min_value=0, max_value=10, value=5, step=1)
 
 with col2:
-    mode_label = "分布模式"
     st.radio(
         "分布模式（平稳趋势时生效）",
-        options=["高斯分布", "均匀分布"],
+        options=["高斯分布", "均匀分布", "三角分布", "指数分布（右偏）", "指数分布（左偏）"],
         index=0,
-        horizontal=True,
+        horizontal=False,
         key="use_gauss",
-        help="高斯分布：数值集中在中心附近\n均匀分布：数值在范围内均匀分散"
+        help="高斯分布：数值集中在中心附近\n均匀分布：数值在范围内均匀分散\n三角分布：中心概率高，两侧递减\n指数分布：一端概率高，向另一端递减"
     )
 
-use_gauss = st.session_state.use_gauss == "高斯分布"
+use_gauss = st.session_state.use_gauss in ["高斯分布", "三角分布"]
 
 if use_gauss:
     volatility = st.slider("波动幅度（标准差）", min_value=0.0, max_value=10.0, value=0.5, step=0.01, format="%.3f")
+else:
+    volatility = 0.5  # 均匀/指数分布不需要标准差
 
 # ── 分段设置 ──────────────────────────────────────────────
 st.subheader("分段设置")
@@ -88,7 +90,7 @@ st.button("＋ 添加分段", on_click=add_segment)
 # ── 生成随机数 ────────────────────────────────────────────
 
 
-def generate_numbers(segments, decimals, volatility, use_gauss):
+def generate_numbers(segments, decimals, volatility, dist_mode):
     result = []
     for seg in segments:
         count = seg["count"]
@@ -106,21 +108,52 @@ def generate_numbers(segments, decimals, volatility, use_gauss):
                 ratio = i / max(count - 1, 1)
                 center = start + (end - start) * ratio
 
-            if use_gauss:
-                # 高斯分布（正态分布），循环确保在范围内
-                max_attempts = 100
-                for _ in range(max_attempts):
-                    val = round(random.gauss(center, volatility), decimals)
-                    if low <= val <= high:
-                        break
-                else:
-                    val = max(low, min(high, val))
-            else:
-                # 均匀分布，整个范围内均匀随机
-                val = round(random.uniform(low, high), decimals)
-
+            val = _generate_one(center, low, high, volatility, dist_mode, decimals)
             result.append(val)
     return result
+
+
+def _generate_one(center, low, high, volatility, dist_mode, decimals):
+    """根据分布模式生成一个随机数，严格在 [low, high] 范围内"""
+    max_attempts = 100
+
+    if dist_mode == "均匀分布":
+        return round(random.uniform(low, high), decimals)
+
+    elif dist_mode == "三角分布":
+        # triangular: 中心概率最高，向两边线性递减
+        for _ in range(max_attempts):
+            val = round(random.triangular(low, high, center), decimals)
+            if low <= val <= high:
+                return val
+        return round(center, decimals)
+
+    elif dist_mode == "指数分布（右偏）":
+        # 左边概率高，右边递减（lambda 越大越集中在左侧）
+        # 映射：center -> low 方向概率高
+        rate = 1 / max(volatility, 0.001)
+        for _ in range(max_attempts):
+            val = round(low + random.expovariate(rate), decimals)
+            if low <= val <= high:
+                return val
+        return round(random.triangular(low, center, high), decimals)
+
+    elif dist_mode == "指数分布（左偏）":
+        # 右边概率高，左边递减
+        rate = 1 / max(volatility, 0.001)
+        for _ in range(max_attempts):
+            val = round(high - random.expovariate(rate), decimals)
+            if low <= val <= high:
+                return val
+        return round(random.triangular(low, high, center), decimals)
+
+    else:
+        # 高斯分布（默认）
+        for _ in range(max_attempts):
+            val = round(random.gauss(center, volatility), decimals)
+            if low <= val <= high:
+                return val
+        return max(low, min(high, val))
 
 
 def generate_excel(numbers):
@@ -154,7 +187,8 @@ with btn_col3:
 
 # ── 生成逻辑 ──────────────────────────────────────────────
 if gen_clicked:
-    numbers = generate_numbers(st.session_state.segments, decimals, volatility, use_gauss)
+    numbers = generate_numbers(st.session_state.segments, decimals, volatility,
+                                  st.session_state.use_gauss)
     st.session_state.numbers = numbers
     st.session_state.gen_counter += 1
 
