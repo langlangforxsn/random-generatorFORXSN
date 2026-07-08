@@ -43,7 +43,7 @@ with col2:
 use_gauss = st.session_state.use_gauss == "高斯分布"
 
 if use_gauss:
-    volatility = st.slider("波动幅度（标准差）", min_value=0.0, max_value=2.0, value=0.1, step=0.01, format="%.3f")
+    volatility = st.slider("波动幅度（标准差）", min_value=0.0, max_value=10.0, value=0.5, step=0.01, format="%.3f")
 
 # ── 分段设置 ──────────────────────────────────────────────
 st.subheader("分段设置")
