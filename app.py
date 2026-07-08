@@ -76,6 +76,9 @@ def generate_numbers(segments, decimals, volatility):
         start = seg["start"]
         end = seg["end"]
 
+        low = min(start, end)
+        high = max(start, end)
+
         for i in range(count):
             if trend == "平稳":
                 center = start
@@ -83,11 +86,16 @@ def generate_numbers(segments, decimals, volatility):
                 ratio = i / max(count - 1, 1)
                 center = start + (end - start) * ratio
 
-            val = round(random.gauss(center, volatility), decimals)
-            # 严格限定在 [start, end] 范围内
-            low = min(start, end)
-            high = max(start, end)
-            val = max(low, min(high, val))
+            # 循环生成，确保值严格在 [low, high] 范围内
+            max_attempts = 100
+            for _ in range(max_attempts):
+                val = round(random.gauss(center, volatility), decimals)
+                if low <= val <= high:
+                    break
+            else:
+                # 如果 100 次都没命中范围，直接裁剪到边界
+                val = max(low, min(high, val))
+
             result.append(val)
     return result
 
