@@ -129,23 +129,22 @@ def _generate_one(center, low, high, volatility, dist_mode, decimals):
         return round(center, decimals)
 
     elif dist_mode == "指数分布（右偏）":
-        # 左边概率高，右边递减（lambda 越大越集中在左侧）
-        # 映射：center -> low 方向概率高
-        rate = 1 / max(volatility, 0.001)
-        for _ in range(max_attempts):
-            val = round(low + random.expovariate(rate), decimals)
-            if low <= val <= high:
-                return val
-        return round(random.triangular(low, center, high), decimals)
-
-    elif dist_mode == "指数分布（左偏）":
-        # 右边概率高，左边递减
+        # 左边概率低，右边高（长尾在右）
         rate = 1 / max(volatility, 0.001)
         for _ in range(max_attempts):
             val = round(high - random.expovariate(rate), decimals)
             if low <= val <= high:
                 return val
         return round(random.triangular(low, high, center), decimals)
+
+    elif dist_mode == "指数分布（左偏）":
+        # 右边概率低，左边高（长尾在左）
+        rate = 1 / max(volatility, 0.001)
+        for _ in range(max_attempts):
+            val = round(low + random.expovariate(rate), decimals)
+            if low <= val <= high:
+                return val
+        return round(random.triangular(low, center, high), decimals)
 
     else:
         # 高斯分布（默认）
@@ -195,15 +194,15 @@ if gen_clicked:
 if "numbers" in st.session_state and st.session_state.numbers:
     numbers = st.session_state.numbers
 
-    # 折线图预览（用 DataFrame 确保横纵坐标正确）
-    st.subheader("📊 预览")
-    df = pd.DataFrame({"序号": range(1, len(numbers) + 1), "数值": numbers})
-    st.line_chart(df, x="序号", y="数值", height=350)
-
-    # 数据展示（用 text_area 方便全选复制）
+    # ── 数据展示（放在折线图上面）──
     st.subheader("📋 数据")
     display_text = "  ".join(str(n) for n in numbers)
     st.text_area("随机数序列（可直接选中复制）", value=display_text, height=150, key=f"data_display_{st.session_state.gen_counter}")
+
+    # ── 折线图 ──
+    st.subheader("📊 预览")
+    df = pd.DataFrame({"序号": range(1, len(numbers) + 1), "数值": numbers})
+    st.line_chart(df, x="序号", y="数值", height=350)
 
     # 一键复制：通过 JS 找到页面上的 textarea 并复制其内容
     if copy_clicked:
