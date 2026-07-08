@@ -33,8 +33,10 @@ with col1:
 # 检查是否有"平稳"趋势的分段
 has_stable = any(s["trend"] == "平稳" for s in st.session_state.segments)
 
+col2_placeholder = st.empty()
+
 if has_stable:
-    with col2:
+    with col2_placeholder.container():
         st.radio(
             "分布模式（平稳趋势时生效）",
             options=["均匀分布", "高斯分布", "三角分布", "指数分布（右偏）", "指数分布（左偏）"],
@@ -44,8 +46,7 @@ if has_stable:
             help="均匀分布：数值在范围内均匀分散\n高斯分布：数值集中在中心附近\n三角分布：中心概率高，两侧递减\n指数分布：一端概率高，向另一端递减"
         )
 else:
-    with col2:
-        st.info("分段中有"平稳"趋势时，分布模式将在此显示")
+    col2_placeholder.info("当某分段趋势设为"平稳"时，\n此处将显示分布模式选项")
 
 use_gauss = st.session_state.use_gauss in ["高斯分布", "三角分布"]
 
