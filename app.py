@@ -47,10 +47,6 @@ if use_gauss:
 else:
     volatility = 0.5
 
-if use_gauss:
-    volatility = st.slider("波动幅度（标准差）", min_value=0.0, max_value=10.0, value=0.5, step=0.01, format="%.3f")
-else:
-    volatility = 0.5
 
 # ── 分段设置 ──────────────────────────────────────────────
 st.subheader("分段设置")
