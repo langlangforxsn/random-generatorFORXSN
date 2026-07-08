@@ -84,6 +84,10 @@ def generate_numbers(segments, decimals, volatility):
                 center = start + (end - start) * ratio
 
             val = round(random.gauss(center, volatility), decimals)
+            # 严格限定在 [start, end] 范围内
+            low = min(start, end)
+            high = max(start, end)
+            val = max(low, min(high, val))
             result.append(val)
     return result
 
